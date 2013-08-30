@@ -1,8 +1,8 @@
 /************************************************************************
 @Name    :      xlsTableFilter - jQuery Plugin
 @Type		:		 jQuery UI
-@Revison :      1.0
-@Date    :      08/29/2013
+@Revison :      1.0.1
+@Date    :      08/30/2013
 @Author  :      JKELLEY - (www.myjqueryplugins.com - www.alpixel.fr)
 @License :      Open Source - MIT License : http://www.opensource.org/licenses/mit-license.php
 *************************************************************************/
@@ -69,6 +69,9 @@
 		
 		/* object stores current filter settings */
 		filters: {},
+		
+		/* id of the element the plugin was called on */
+		elid: null,
 
 		/*****************
       * Constructor Method
@@ -78,6 +81,10 @@
 			var self = this,
 			el = self.element,
 			headers = $(el).find("th");
+			
+			/* Set up the filters storage for this element */
+			self.elid = el.prop("id");
+			self.filters[self.elid] = {};
 			
 			/* Add filter method to table headers */
 			$.each(headers, function(i, h) {
@@ -187,9 +194,9 @@
 		_addFilterRow: function(val, colNum) {
 			var text = (val.length == 0 ? "<i>&lt;blank&gt;</i>" : val);
 			val = this._adjustCase(val);
-			//console.log(this.filters["col" + colNum]);
-			if (this.filters["col" + colNum]) {
-				var checked = (jQuery.inArray(val, this.filters["col" + colNum]) == -1 ? false : true);
+
+			if (this.filters[this.elid]["col" + colNum]) {
+				var checked = (jQuery.inArray(val, this.filters[this.elid]["col" + colNum]) == -1 ? false : true);
 			}
 			else {
 				var checked = true;	
@@ -244,9 +251,9 @@
 			var self = this;
 			
 			var filterRow = "col" + colNum
-			self.filters[filterRow] = new Array;
+			self.filters[self.elid][filterRow] = new Array;
 			$.each($("div.xlsFilterRow input:checked"), function() {
-				self.filters[filterRow][self.filters[filterRow].length] = $(this).val();
+				self.filters[self.elid][filterRow][self.filters[self.elid][filterRow].length] = $(this).val();
 			});
 			
 			if ($("div.xlsFilterRow input").not(":checked").length === 0) {
@@ -261,7 +268,7 @@
 				var visible = true;
 				$row.show();
 				
-				$.each(self.filters, function(key, val) {
+				$.each(self.filters[self.elid], function(key, val) {
 					var i = key.substr(3);
 					if (visible == true) {
 						if (jQuery.inArray(self._adjustCase($row.children("td:nth-of-type(" + i + ")").text()), val) == -1) {
