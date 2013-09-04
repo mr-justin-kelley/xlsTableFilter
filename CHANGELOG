@@ -1,0 +1,23 @@
+xlsTableFilter changelog
+======================
+
+
+Changes in version 1.0.2 (2013-09-03)
+-------------------------------------
+
+General
+* Implemented self vs this as a global property
+
+
+Changes in version 1.0.1 (2013-08-30)
+-------------------------------------
+
+Bug fixes
+* Filters are shared between instances
+
+
+Changes in version 1.0 (2013-08-30)
+-------------------------------------
+
+General
+* Plugin Released
