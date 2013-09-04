@@ -1,8 +1,8 @@
 /************************************************************************
 @Name    :      xlsTableFilter - jQuery Plugin
 @Type		:		 jQuery UI
-@Revison :      1.0.2
-@Date    :      09/03/2013
+@Revison :      1.0.3
+@Date    :      09/04/2013
 @Author  :      JKELLEY - (www.myjqueryplugins.com - www.alpixel.fr)
 @License :      Open Source - MIT License : http://www.opensource.org/licenses/mit-license.php
 *************************************************************************/
@@ -51,9 +51,7 @@
  
 /** xlsTableFilter Plugin **/
 ;(function($) {
-	var self;
-	$.widget("ui.xlsTableFilter", {
-		
+	$.widget("jk.xlsTableFilter", {
 		/**************
       * OPTIONS
       **************/
@@ -79,9 +77,8 @@
       *****************/
 		_create: function() {
 			/* vars **/
-			self = this;
-			
-			var el = self.element,
+			var self = this,
+			el = self.element,
 			headers = $(el).find("th");
 			
 			/* Set up the filters storage for this element */
@@ -92,7 +89,7 @@
 			$.each(headers, function(i, h) {
 				var filterable = ((self.options.onlyColumns == null && jQuery.inArray(i, self.options.ignoreColumns) == -1) || jQuery.inArray(i, self.options.onlyColumns) !== -1 ? true : false);
 				if (filterable == true) {
-					$(this).addClass("xlsFilterHeader").click(function(e) {
+					$(this).addClass("xlsFilterHeader").on("click.xlsTableFilter", function(e) {
 						self._openFilter($(this));
 					});
 				}
@@ -109,6 +106,7 @@
 
 		/* Open the Filter Dialog */
 		_openFilter: function(header) {
+			var self = this;
 			var colNum = (header.index() + 1);
 			var filterContent = self._getFilterContent(header);
 			var filterDiv = self._createDialogDiv("divXlsFilter", "Filter - " + header.text(), filterContent);
@@ -142,6 +140,7 @@
 		
 		/* Build the html content of the filter dialog */
 		_getFilterContent: function(header) {
+			var self = this;
 			var colNum = (header.index() + 1);
 			var vals = new Array;
 
@@ -163,7 +162,8 @@
 		},
 		
 		/* Add the select and search methods to the filter dialog */
-		_setupFilter: function() {			
+		_setupFilter: function() {
+			var self = this;		
 			$("#xlsFilterAll").click(function() {
 				$.each($("div.xlsFilterRow"), function() {
 					self.checkRow($(this), true);
@@ -190,6 +190,7 @@
 		
 		/* Add a checkbox value row to the filter dialog */
 		_addFilterRow: function(val, colNum) {
+			var self = this;
 			var text = (val.length == 0 ? "<i>&lt;blank&gt;</i>" : val);
 			val = self._adjustCase(val);
 
@@ -206,7 +207,9 @@
 		
 		/* Check or uncheck  a value row in the filter dialog */
 		checkRow: function(row, check) {
+			var self = this;
 			var checkbox = $(row).find("input");
+			
 			check = (arguments.length == 2 ? check : (checkbox.prop("checked") == true ? false : true));
 			checkbox.prop("checked", check);
 			if (self.options.checkStyle == "custom") {
@@ -218,6 +221,7 @@
 		
 		/* Search for matching value row in the filter dialog */
 		_filterBySearchField: function() {
+			var self = this;
 			if ($("#filterSearch").val().length == 0) {
 				$("div.xlsFilterRow").show();	
 			}
@@ -235,6 +239,7 @@
 		
 		/* Create the filter dialog div */
 		_createDialogDiv: function(divid, title, contents) {
+			var self = this;
 			if ($("#" + divid).length > 0) {
 				$("#" + divid).html(contents).attr("title", title);
 			}
@@ -246,6 +251,7 @@
 		
 		/* Filter the table based on the selected settings */
 		_filterTable: function(colNum) {
+			var self = this;
 			var filterRow = "col" + colNum
 			self.filters[self.elid][filterRow] = new Array;
 			$.each($("div.xlsFilterRow input:checked"), function() {
@@ -278,6 +284,7 @@
 		},
 		
 		_printRowsDisplayed: function() {
+			var self = this;
 			if (self.options.rowsDisplay !== false) {
 				var VisibleCount = self.element.find("tbody tr:visible").length;
 				var TotalRows = self.element.find("tbody tr").length;
@@ -288,11 +295,13 @@
 		
 		/* Adjust the case of a string based on the ignoreCase option */
 		_adjustCase: function(val) {
+			var self = this;
 			return (self.options.ignoreCase == true ? val.toLowerCase() : val);
 		},
 		
 		/* Sort through column values for unique strings */
 		sortUnique: function(arr) {
+			var self = this;
 			arr.sort(function(a, b){
 				a = self._adjustCase(a);
 				b = self._adjustCase(b);	
@@ -313,6 +322,23 @@
 		_setOption: function( key, value ) {
 			options.key = value;
 		},
+		
+		/* Destroy function */  
+		destroy: function() {
+			var self = this,
+			headers = this.element.find("th");
+			
+			/* Remove Filters */
+			$.each(headers, function(i, h) {
+				var filterable = ((self.options.onlyColumns == null && jQuery.inArray(i, self.options.ignoreColumns) == -1) || jQuery.inArray(i, self.options.onlyColumns) !== -1 ? true : false);
+				if (filterable == true) {
+					$(this).removeClass("xlsFilterHeader").off("click.xlsTableFilter");
+				}
+				else {
+					$(this).removeClass("xlsNoFilterHeader");	
+				}
+			});
+    }
 
 	});
 })(jQuery);

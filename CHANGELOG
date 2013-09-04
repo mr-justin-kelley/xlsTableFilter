@@ -1,6 +1,15 @@
 xlsTableFilter changelog
 ======================
 
+Changes in version 1.0.3 (2013-09-04)
+-------------------------------------
+
+Features
+* Implemented destroy function
+
+Bug fixes
+* Self as global property causing additioal instance issues
+
 
 Changes in version 1.0.2 (2013-09-03)
 -------------------------------------
