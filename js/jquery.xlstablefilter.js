@@ -1,8 +1,8 @@
 /************************************************************************
 @Name    :      xlsTableFilter - jQuery Plugin
 @Type		:		 jQuery UI
-@Revison :      1.0.1
-@Date    :      08/30/2013
+@Revison :      1.0.2
+@Date    :      09/03/2013
 @Author  :      JKELLEY - (www.myjqueryplugins.com - www.alpixel.fr)
 @License :      Open Source - MIT License : http://www.opensource.org/licenses/mit-license.php
 *************************************************************************/
@@ -26,13 +26,13 @@
  *            optional settings.
  * 
  * 
- * @option Integer width (optional) A integer setting the width of the filter dialog. Default: 400.
+ * @option Integer width (optional) An integer setting the width of the filter dialog. Default: 400.
  *
- * @option Integer height (optional) A integer setting the height of the filter dialog. Default: 550.
+ * @option Integer height (optional) An integer setting the height of the filter dialog. Default: 550.
  *
- * @option Integer maxHeight (optional) A integer setting the maximum height of the filter dialog. Default: window height.
+ * @option Integer maxHeight (optional) An integer setting the maximum height of the filter dialog. Default: window height.
  *
- * @option Boolean maxHeight (optional) A boolean setting whether the filter should ignore case. Default: true.
+ * @option Boolean ignoreCase (optional) A boolean setting whether the filter should ignore case. Default: true.
  *
  * @option String checkStyle (optional) A string defining whether the dialog should use html checkboxes or
  *				custom on/off images. "default" will use html checkboxes.  "custom" will use images.  Default: default.
@@ -51,6 +51,7 @@
  
 /** xlsTableFilter Plugin **/
 ;(function($) {
+	var self;
 	$.widget("ui.xlsTableFilter", {
 		
 		/**************
@@ -78,8 +79,9 @@
       *****************/
 		_create: function() {
 			/* vars **/
-			var self = this,
-			el = self.element,
+			self = this;
+			
+			var el = self.element,
 			headers = $(el).find("th");
 			
 			/* Set up the filters storage for this element */
@@ -107,11 +109,10 @@
 
 		/* Open the Filter Dialog */
 		_openFilter: function(header) {
-			var self = this;
 			var colNum = (header.index() + 1);
-			var filterContent = this._getFilterContent(header);
-			var filterDiv = this._createDialogDiv("divXlsFilter", "Filter", filterContent);
-			this._setupFilter();
+			var filterContent = self._getFilterContent(header);
+			var filterDiv = self._createDialogDiv("divXlsFilter", "Filter - " + header.text(), filterContent);
+			self._setupFilter();
 			
 			$(filterDiv).dialog({
         		resizable: false,
@@ -141,14 +142,13 @@
 		
 		/* Build the html content of the filter dialog */
 		_getFilterContent: function(header) {
-			var self = this;
 			var colNum = (header.index() + 1);
 			var vals = new Array;
 
 			$.each($(self.element).find("tr td:nth-of-type(" + colNum + ")"), function(i, el) {
 				vals[vals.length] = $(el).text();
 			});
-			vals = this.sortUnique(vals);
+			vals = self.sortUnique(vals);
 			
 			var filter = '<form id="xlsFilterForm">';
 			filter = filter + '<div>Text Search <input type="text" id="filterSearch" style="width: 200px;"></div>';
@@ -163,9 +163,7 @@
 		},
 		
 		/* Add the select and search methods to the filter dialog */
-		_setupFilter: function() {
-			var self = this;
-			
+		_setupFilter: function() {			
 			$("#xlsFilterAll").click(function() {
 				$.each($("div.xlsFilterRow"), function() {
 					self.checkRow($(this), true);
@@ -193,16 +191,16 @@
 		/* Add a checkbox value row to the filter dialog */
 		_addFilterRow: function(val, colNum) {
 			var text = (val.length == 0 ? "<i>&lt;blank&gt;</i>" : val);
-			val = this._adjustCase(val);
+			val = self._adjustCase(val);
 
-			if (this.filters[this.elid]["col" + colNum]) {
-				var checked = (jQuery.inArray(val, this.filters[this.elid]["col" + colNum]) == -1 ? false : true);
+			if (self.filters[self.elid]["col" + colNum]) {
+				var checked = (jQuery.inArray(val, self.filters[self.elid]["col" + colNum]) == -1 ? false : true);
 			}
 			else {
 				var checked = true;	
 			}
 
-			var row = '<div class="xlsFilterRow"><input type="checkbox" style="' + (this.options.checkStyle == "default" ? "" : "display: none;") + '" value="' + val + '" ' + (checked == true ? 'checked ' : '') + 'name="selFilter[]">' + (this.options.checkStyle == "default" ? '' : '<div class="xlsFilterCheck xlsFilterCheckO' + (checked == true ? 'n' : 'ff') + '"></div>') + '<span>' + text + '</span></div>';
+			var row = '<div class="xlsFilterRow"><input type="checkbox" style="' + (self.options.checkStyle == "default" ? "" : "display: none;") + '" value="' + val + '" ' + (checked == true ? 'checked ' : '') + 'name="selFilter[]">' + (self.options.checkStyle == "default" ? '' : '<div class="xlsFilterCheck xlsFilterCheckO' + (checked == true ? 'n' : 'ff') + '"></div>') + '<span>' + text + '</span></div>';
 			return row;
 		},
 		
@@ -211,7 +209,7 @@
 			var checkbox = $(row).find("input");
 			check = (arguments.length == 2 ? check : (checkbox.prop("checked") == true ? false : true));
 			checkbox.prop("checked", check);
-			if (this.options.checkStyle == "custom") {
+			if (self.options.checkStyle == "custom") {
 				var checkdiv = row.find(".xlsFilterCheck");
 				checkdiv.addClass(check == true ? "xlsFilterCheckOn" : "xlsFilterCheckOff");
 				checkdiv.removeClass(check == true ? "xlsFilterCheckOff" : "xlsFilterCheckOn");
@@ -248,8 +246,6 @@
 		
 		/* Filter the table based on the selected settings */
 		_filterTable: function(colNum) {
-			var self = this;
-			
 			var filterRow = "col" + colNum
 			self.filters[self.elid][filterRow] = new Array;
 			$.each($("div.xlsFilterRow input:checked"), function() {
@@ -282,22 +278,21 @@
 		},
 		
 		_printRowsDisplayed: function() {
-			if (this.options.rowsDisplay !== false) {
-				var VisibleCount = this.element.find("tbody tr:visible").length;
-				var TotalRows = this.element.find("tbody tr").length;
-				var rowDisplay = (typeof(this.options.rowsDisplay) == "object" ? this.options.rowsDisplay : $("#" + this.options.rowsDisplay));
+			if (self.options.rowsDisplay !== false) {
+				var VisibleCount = self.element.find("tbody tr:visible").length;
+				var TotalRows = self.element.find("tbody tr").length;
+				var rowDisplay = (typeof(self.options.rowsDisplay) == "object" ? self.options.rowsDisplay : $("#" + self.options.rowsDisplay));
 				rowDisplay.html('Displaying ' + VisibleCount + (VisibleCount != TotalRows ? ' of ' + TotalRows + ' row' + (TotalRows == 1 ? '' : 's') : ' row' + (VisibleCount == 1 ? '' : 's')) + '.');	
 			}
 		},
 		
 		/* Adjust the case of a string based on the ignoreCase option */
 		_adjustCase: function(val) {
-			return (this.options.ignoreCase == true ? val.toLowerCase() : val);
+			return (self.options.ignoreCase == true ? val.toLowerCase() : val);
 		},
 		
 		/* Sort through column values for unique strings */
 		sortUnique: function(arr) {
-			var self = this;
 			arr.sort(function(a, b){
 				a = self._adjustCase(a);
 				b = self._adjustCase(b);	
